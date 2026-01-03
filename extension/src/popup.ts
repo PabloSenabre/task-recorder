@@ -11,7 +11,7 @@ import { showAgentModal } from './agent-widget.js';
 const AGENT_ID = 'agent_4801ke0jpqkdf8pa17y612q7vhgq';
 
 // API Base URL
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://task-recorder-tawny.vercel.app';
 
 // ============================================
 // API Functions

@@ -15,7 +15,7 @@ export interface AgentContext {
 }
 
 const AGENT_ID = 'agent_4801ke0jpqkdf8pa17y612q7vhgq';
-const AGENT_PAGE_URL = 'http://localhost:3000/agent.html';
+const AGENT_PAGE_URL = 'https://task-recorder-tawny.vercel.app/agent.html';
 
 function createConfirmModal(): HTMLElement {
   const container = document.createElement('div');

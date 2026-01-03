@@ -9,7 +9,7 @@ import type { Action, ExtensionMessage, RecordingStatusPayload, GenerationComple
 // Configuration
 // ============================================
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://task-recorder-tawny.vercel.app';
 const BATCH_INTERVAL_MS = 5000; // Send actions every 5 seconds
 
 // ============================================
