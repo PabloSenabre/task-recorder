@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# Environment files (contain secrets!)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Results (local only, may contain sensitive data)
+results/
+
+# Chrome extension unpacked (build it fresh)
+extension/dist/
+
+# Vercel
+.vercel/
+
+# Temporary files
+*.tmp
+*.temp
+

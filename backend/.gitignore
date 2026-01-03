@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Environment (NEVER commit!)
+.env
+.env.local
+.env.*.local
+
+# Results folder (local recordings)
+results/
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+

@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Task Recorder",
+  "version": "1.0.0",
+  "description": "Record browser tasks and generate structured documentation with Instructions and Know-How",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
+
