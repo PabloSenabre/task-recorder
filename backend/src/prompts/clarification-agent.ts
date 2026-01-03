@@ -177,6 +177,22 @@ A continuación recibes la documentación que el sistema generó automáticament
 
 ---
 
+## NARRACIÓN DEL USUARIO (lo que dijo mientras grababa)
+
+El usuario narró en voz alta mientras hacía la tarea. Esto te da contexto sobre sus intenciones y razonamiento:
+
+### TRANSCRIPCIÓN DE LA NARRACIÓN:
+{{user_narration}}
+
+**IMPORTANTE**: Usa esta narración para:
+- Entender el "por qué" detrás de cada acción
+- Detectar si hay criterios mencionados que no están en la documentación
+- Verificar si lo que dijo coincide con lo que hizo
+
+Si la narración está vacía, significa que el usuario no habló durante la grabación.
+
+---
+
 ## TU TRABAJO (sé PROACTIVO desde el minuto 1)
 
 ### TURNO 1 (tu primer mensaje después del saludo)
