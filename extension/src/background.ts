@@ -205,6 +205,7 @@ async function stopRecording(): Promise<{ success: boolean; error?: string }> {
     
     // Stop task and get generated markdown (include audio if available)
     const markdown = await stopTask(state.taskId, state.completeAudio);
+    const taskId = state.taskId;
     
     state.isRecording = false;
     state.lastMarkdown = markdown;
@@ -217,11 +218,16 @@ async function stopRecording(): Promise<{ success: boolean; error?: string }> {
       type: 'GENERATION_COMPLETE',
       payload: {
         markdown,
-        taskId: state.taskId,
+        taskId,
       },
     }).catch(() => {
-      // Popup might be closed
+      // Popup might be closed - that's OK
     });
+    
+    // Open the agent page automatically (works even if popup is closed)
+    const agentUrl = `${API_BASE_URL}/agent.html?taskId=${taskId}&agentId=agent_4801ke0jpqkdf8pa17y612q7vhgq`;
+    console.log('[Task Recorder] Opening agent page:', agentUrl);
+    chrome.tabs.create({ url: agentUrl });
     
     console.log('[Task Recorder] Recording stopped, markdown generated');
     return { success: true };

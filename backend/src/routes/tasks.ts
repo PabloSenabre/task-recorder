@@ -23,7 +23,10 @@ import { getTask, setTask, deleteTask, listTasks } from '../store/index.js';
 // Get directory path for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const RESULTS_DIR = join(__dirname, '../../results');
+
+// Use /tmp in production (Vercel), local path in development
+const isVercel = process.env.VERCEL === '1';
+const RESULTS_DIR = isVercel ? '/tmp/results' : join(__dirname, '../../results');
 
 // ============================================
 // Route Handlers
