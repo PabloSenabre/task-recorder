@@ -3,7 +3,8 @@
 // Receives conversation transcripts after calls end
 // ============================================
 
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { createHmac } from 'crypto';
 import { getTask, setTask, getTaskIdForConversation, clearConversation } from '../store/index.js';
 
 // ============================================
@@ -11,7 +12,7 @@ import { getTask, setTask, getTaskIdForConversation, clearConversation } from '.
 // ============================================
 
 interface ElevenLabsWebhookPayload {
-  type: 'post_call_transcription';
+  type: 'post_call_transcription' | 'post_call_audio' | 'call_initiation_failure';
   event_timestamp: number;
   data: {
     agent_id: string;
@@ -26,6 +27,60 @@ interface ElevenLabsWebhookPayload {
     call_duration_seconds: number;
     cost_credits: number;
   };
+}
+
+// ============================================
+// HMAC Verification
+// ============================================
+
+const WEBHOOK_SECRET = process.env.ELEVENLABS_WEBHOOK_SECRET || '';
+const TIMESTAMP_TOLERANCE_MS = 30 * 60 * 1000; // 30 minutes
+
+function verifyWebhookSignature(
+  signature: string | undefined,
+  rawBody: string
+): { valid: boolean; error?: string } {
+  // If no secret configured, skip verification (for testing)
+  if (!WEBHOOK_SECRET) {
+    console.warn('[Webhook] No ELEVENLABS_WEBHOOK_SECRET configured, skipping HMAC verification');
+    return { valid: true };
+  }
+
+  if (!signature) {
+    return { valid: false, error: 'Missing ElevenLabs-Signature header' };
+  }
+
+  // Parse signature header: t=timestamp,v0=hash
+  const parts = signature.split(',');
+  const timestampPart = parts.find(p => p.startsWith('t='));
+  const hashPart = parts.find(p => p.startsWith('v0='));
+
+  if (!timestampPart || !hashPart) {
+    return { valid: false, error: 'Invalid signature format' };
+  }
+
+  const timestamp = timestampPart.substring(2);
+  const providedHash = hashPart;
+
+  // Validate timestamp (not older than 30 minutes)
+  const requestTimestamp = parseInt(timestamp, 10) * 1000;
+  const tolerance = Date.now() - TIMESTAMP_TOLERANCE_MS;
+  
+  if (requestTimestamp < tolerance) {
+    return { valid: false, error: 'Request expired' };
+  }
+
+  // Validate HMAC signature
+  const message = `${timestamp}.${rawBody}`;
+  const expectedHash = 'v0=' + createHmac('sha256', WEBHOOK_SECRET)
+    .update(message)
+    .digest('hex');
+
+  if (providedHash !== expectedHash) {
+    return { valid: false, error: 'Invalid signature' };
+  }
+
+  return { valid: true };
 }
 
 // ============================================
@@ -91,10 +146,34 @@ Si añadió información nueva, incorpórala en la sección apropiada.`;
 
 export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
   
+  // Add raw body parsing for HMAC verification
+  fastify.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+    try {
+      // Store raw body for HMAC verification
+      (req as any).rawBody = body;
+      const json = JSON.parse(body as string);
+      done(null, json);
+    } catch (err) {
+      done(err as Error, undefined);
+    }
+  });
+
   // POST /webhook/elevenlabs - Receive Eleven Labs webhook
   fastify.post<{
     Body: ElevenLabsWebhookPayload;
-  }>('/elevenlabs', async (request, reply) => {
+  }>('/elevenlabs', async (request: FastifyRequest<{ Body: ElevenLabsWebhookPayload }>, reply: FastifyReply) => {
+    
+    // Verify HMAC signature
+    const signature = request.headers['elevenlabs-signature'] as string | undefined;
+    const rawBody = (request as any).rawBody as string;
+    
+    const verification = verifyWebhookSignature(signature, rawBody);
+    if (!verification.valid) {
+      fastify.log.warn({ error: verification.error }, 'Webhook signature verification failed');
+      reply.status(401);
+      return { success: false, error: verification.error };
+    }
+    
     const payload = request.body;
     
     fastify.log.info({
@@ -177,8 +256,8 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.get('/status', async () => {
     return {
       status: 'ready',
+      hmacConfigured: !!WEBHOOK_SECRET,
       timestamp: Date.now(),
     };
   });
 }
-
